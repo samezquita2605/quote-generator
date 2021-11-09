@@ -3,65 +3,63 @@ const quoteText = document.getElementById('quote');
 const authorText = document.getElementById('author');
 const twitterBtn = document.getElementById('twitter');
 const newQuoteBtn = document.getElementById('new-quote');
-const losder = document.getElementById('loader');
+const loader = document.getElementById('loader');
 
-let apiQuotes = [];
-
-function showLoadingSpinner () {
+// Show Loading
+function loading() {
     loader.hidden = false;
     quoteContainer.hidden = true;
 }
 
-function removeLoadingSpinner () {
-    quoteContainer.hidden = false;
-    loader.hidden = true;
+// Hide Loading
+function complete() {
+    if (!loader.hidden) {
+        quoteContainer.hidden = false;
+        loader.hidden = true;
+    }
 }
 
-// Show new quote
-
-function newQuote() {
-    showLoadingSpinner();
-    // Pick a random quote from apiQuotes array
-    const quote = apiQuotes[Math.floor(Math.random() * apiQuotes.length)];
-    // Check if author field is black abd replace it with quote unkown
-    if (!quote.author) {
-        author.textContent = 'Unknown';
-    } else {
-        authorText.textContent = quote.author;
-    }
-    // Check quote lenght to determine the styling
-    if (quote.text.length > 120) {
-        quoteText.classList.add('long-quote');
-    } else {
-        quoteText.classList.remove('long-quote');
-    }
-    // Set quote, hide loader
-    quoteText.textContent = quote.text;
-    removeLoadingSpinner();
-}
-
-// Get quotes from API
-async function getQuotes () {
-    showLoadingSpinner();
-    const apiUrl = 'https://type.fit/api/quotes'
+// Get Quote From API
+async function getQuote() {
+    loading();
+    const proxyUrl = 'https://infinite-coast-59917.herokuapp.com/'
+    const apiUrl = 'http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json';
     try {
-        const response = await fetch(apiUrl);
-        apiQuotes = await response.json();
-        newQuote();
+        const response = await fetch(proxyUrl + apiUrl);
+        const data = await response.json();
+        // If Author is blank, add 'Unknown'
+        if (data.quoteAuthor === '') {
+            authorText.innerText = 'Unknown';
+        } else {
+            authorText.innerText = data.quoteAuthor;
+        }
+        // Reduce font size for long quotes
+        if (data.quoteText.length > 120) {
+            quoteText.classList.add('long-quote');
+        } else {
+            quoteText.classList.remove('long-quote');
+        }
+        quoteText.innerText = data.quoteText;
+        // Stop Loader, Show Quote
+        complete();
     } catch (error) {
-        getQuotes();
+        getQuote();
     }
 }
 
-// Tweet a quote 
+// Tweet Quote
 function tweetQuote() {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${quoteText.textContent} - ${authorText.textContent}`;
+    const quote = quoteText.innerText;
+    const author = authorText.innerText;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${quote} - ${author}`;
     window.open(twitterUrl, '_blank');
 }
 
-// Event listeners
-newQuoteBtn.addEventListener ('click', newQuote);
+// Event Listeners
+newQuoteBtn.addEventListener('click', getQuote);
 twitterBtn.addEventListener('click', tweetQuote);
 
-// On load 
-getQuotes();
+// On Load
+getQuote();
+
+
